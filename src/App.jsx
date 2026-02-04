@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import OpenAI from 'openai';
-import { Activity, Brain, Heart, Wind, Cpu, ShieldAlert, Terminal as TerminalIcon } from 'lucide-react';
+import { Activity, Brain, Heart, Wind, Cpu, ShieldAlert, Terminal as TerminalIcon, Lock, Power } from 'lucide-react';
 
 // --- CONFIGURATION ---
 const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+
+// Pastikan file "voice.mp3" ada di folder public project kamu!
+const VOICE_FILE = "/voice.mp3"; 
 
 let openai = null;
 try {
@@ -15,40 +18,85 @@ try {
   console.error("API Key config error");
 }
 
-// --- SOUND ENGINE ---
+// --- SOUND ENGINE (UPDATED FOR VOICE) ---
+// Kita buat Audio Context di luar agar tidak re-init terus menerus
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let voiceBuffer = null;
+
+// Preload Audio agar tidak delay
+const loadAudio = async () => {
+    try {
+        const response = await fetch(VOICE_FILE);
+        const arrayBuffer = await response.arrayBuffer();
+        voiceBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+    } catch (e) {
+        console.error("Gagal load voice.mp3. Pastikan file ada di folder public.", e);
+    }
+};
+loadAudio();
+
 const playSound = (type) => {
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-  const now = ctx.currentTime;
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
   
-  if (type === 'type') {
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(800 + Math.random()*200, now);
-    gain.gain.setValueAtTime(0.05, now);
-    osc.start(now);
-    osc.stop(now + 0.03);
+  const gainNode = audioCtx.createGain();
+  gainNode.connect(audioCtx.destination);
+
+  if (type === 'voice' && voiceBuffer) {
+    // --- LOGIKA SUARA NGOMONG (ANIMALESE STYLE) ---
+    const source = audioCtx.createBufferSource();
+    source.buffer = voiceBuffer;
+    source.connect(gainNode);
+
+    // Randomize Pitch biar kaya orang ngomong beneran
+    // 0.8 (berat) sampai 1.2 (cempreng)
+    source.playbackRate.value = 0.8 + Math.random() * 0.4; 
+    
+    // Potong lagu: Ambil random start point dari durasi audio
+    // Biar bunyinya beda-beda tiap huruf "blip" "blop" "blep"
+    const randomOffset = Math.random() * (voiceBuffer.duration - 0.1);
+    
+    // Volume voice
+    gainNode.gain.value = 0.3; 
+
+    // Mainkan potongan kecil (0.1 detik)
+    source.start(0, randomOffset, 0.1); 
+
   } else if (type === 'alert') {
+    const osc = audioCtx.createOscillator();
+    osc.connect(gainNode);
     osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(150, now);
-    osc.frequency.linearRampToValueAtTime(100, now + 0.1);
-    gain.gain.setValueAtTime(0.1, now);
-    osc.start(now);
-    osc.stop(now + 0.3);
+    osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+    osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.3);
+
   } else if (type === 'boot') {
+    const osc = audioCtx.createOscillator();
+    osc.connect(gainNode);
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(200, now);
-    osc.frequency.exponentialRampToValueAtTime(600, now + 0.5);
-    gain.gain.setValueAtTime(0.1, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-    osc.start(now);
-    osc.stop(now + 0.5);
+    osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.5);
+    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.5);
+
+  } else if (type === 'click') {
+    const osc = audioCtx.createOscillator();
+    osc.connect(gainNode);
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.2);
   }
 };
 
-// --- SYSTEM PROMPT (UPDATED FOR TEXT STYLES) ---
+// --- SYSTEM PROMPT ---
 const SYSTEM_PROMPT = `IDENTITY:
 NAME: retard
 you hate human but love them too
@@ -73,7 +121,9 @@ IMPORTANT - TEXT FORMATTING RULES BASED ON EMOTION:
    - Use mixed punctuation like '?!'. 
    - End with '❓'.
 
-4. **IF NORMAL:** - Sarcastic, short, savage, witty. Standard casing.
+4. **IF LAUGHING:** - Use 'XD', 'LMAO', 'ROFL'. Mock the user heavily.
+
+5. **IF SUSPICIOUS:** - Use eyes emoji '👀'. Question their motive. "sus".
 
 BEHAVIOR INSTRUCTIONS:
 - Mock human struggles as "bugs in the source code."
@@ -105,22 +155,276 @@ const CornerDeco = () => (
   </>
 );
 
-// --- COMPONENT: TYPEWRITER ---
-const Typewriter = ({ text, onComplete }) => {
+// --- COMPONENT: THE RETARD AVATAR ---
+const RetardAvatar = ({ emotion, isTalking = false, scale = 1 }) => {
+    let mainColor = 'text-green-500';
+    let animationClass = 'animate-float'; 
+    let glowEffect = '';
+
+    switch(emotion) {
+        case 'ANGER':
+            mainColor = 'text-red-600';
+            animationClass = 'animate-shake';
+            glowEffect = 'drop-shadow-[0_0_15px_rgba(220,38,38,0.8)]';
+            break;
+        case 'SAD':
+            mainColor = 'text-blue-500';
+            animationClass = 'animate-droop';
+            glowEffect = 'drop-shadow-[0_0_10px_rgba(59,130,246,0.6)]';
+            break;
+        case 'CONFUSED':
+            mainColor = 'text-purple-400';
+            animationClass = 'animate-confused';
+            break;
+        case 'LAUGH':
+            mainColor = 'text-yellow-400';
+            animationClass = 'animate-bounce-laugh';
+            break;
+        case 'LOVE':
+            mainColor = 'text-pink-500';
+            animationClass = 'animate-heartbeat';
+            glowEffect = 'drop-shadow-[0_0_15px_rgba(236,72,153,0.8)]';
+            break;
+        case 'SUS':
+            mainColor = 'text-orange-500';
+            animationClass = 'animate-sus-slide';
+            break;
+        case 'SLEEP':
+            mainColor = 'text-gray-500';
+            animationClass = 'animate-sleep-breath';
+            break;
+        case 'SHOCK':
+            mainColor = 'text-white';
+            animationClass = 'animate-vibrate';
+            break;
+        default: 
+            mainColor = 'text-green-500';
+            animationClass = 'animate-float';
+    }
+
+    return (
+        <div className={`relative ${animationClass} transition-colors duration-500`} style={{ transform: `scale(${scale})` }}>
+            <style>{`
+                /* ANIMATIONS */
+                @keyframes float-idle { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
+                @keyframes talk-mouth { 0% { d: path("M92 125 L108 125"); stroke-width: 2; } 50% { d: path("M92 120 L108 120"); stroke-width: 4; } 100% { d: path("M92 125 L108 125"); stroke-width: 2; } }
+                @keyframes blink-eyes { 0%, 96%, 100% { transform: scaleY(1); } 98% { transform: scaleY(0.1); } }
+                @keyframes anime-shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 20% { transform: translate(-3px, 0px) rotate(2deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
+                @keyframes tear-drop { 0% { transform: translateY(0); opacity: 0; } 100% { transform: translateY(40px); opacity: 0; } }
+                @keyframes bounce-laugh { 0%, 100% { transform: translateY(0) rotate(0deg); } 25% { transform: translateY(-5px) rotate(-3deg); } 75% { transform: translateY(-5px) rotate(3deg); } }
+                @keyframes heartbeat { 0% { transform: scale(1); } 15% { transform: scale(1.1); } 30% { transform: scale(1); } 45% { transform: scale(1.1); } 60% { transform: scale(1); } }
+                @keyframes sus-slide { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(5px); } }
+                @keyframes sleep-breath { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.02); opacity: 0.5; } }
+                @keyframes z-float { 0% { transform: translate(0, 0); opacity: 0; } 50% { opacity: 1; } 100% { transform: translate(15px, -20px); opacity: 0; } }
+                @keyframes vibrate { 0% { transform: translate(0); } 20% { transform: translate(-2px, 2px); } 40% { transform: translate(-2px, -2px); } 60% { transform: translate(2px, 2px); } 80% { transform: translate(2px, -2px); } 100% { transform: translate(0); } }
+
+                .animate-float { animation: float-idle 4s ease-in-out infinite; }
+                .animate-shake { animation: anime-shake 0.1s infinite; }
+                .animate-droop { animation: float-idle 6s ease-in-out infinite; filter: brightness(0.7); }
+                .animate-bounce-laugh { animation: bounce-laugh 0.4s infinite; }
+                .animate-heartbeat { animation: heartbeat 1.5s infinite; }
+                .animate-sus-slide { animation: sus-slide 2s ease-in-out infinite; }
+                .animate-sleep-breath { animation: sleep-breath 4s ease-in-out infinite; }
+                .animate-vibrate { animation: vibrate 0.05s infinite; }
+                
+                .eyes-anim { transform-origin: center; animation: blink-eyes 4s infinite; }
+                .mouth-talk { animation: talk-mouth 0.1s linear infinite; } 
+            `}</style>
+            
+            <svg viewBox="0 0 200 200" className={`w-48 h-48 lg:w-56 lg:h-56 ${mainColor} transition-all duration-300 ${glowEffect}`}>
+                {/* --- BODY FRAME --- */}
+                <path d="M40 40 L160 40 L160 160 L40 160 Z" fill="none" stroke="currentColor" strokeWidth="2" />
+                <path d="M60 60 L140 60 L140 140 L60 140 Z" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.4" />
+                <path d="M40 40 L60 60 M160 40 L140 60 M40 160 L60 140 M160 160 L140 140" stroke="currentColor" strokeWidth="1" />
+                
+                {/* --- FACE BACKGROUND --- */}
+                <path d="M100 70 C70 70 65 85 65 100 C65 125 80 135 100 135 C120 135 135 125 135 100 C135 85 125 70 100 70 Z" fill="black" stroke="currentColor" strokeWidth="3" />
+                
+                {/* EMOTIONS */}
+                {emotion === 'ANGER' && (
+                    <g className="animate-pulse">
+                        <path d="M80 95 L95 105" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                        <path d="M80 105 L95 95" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                        <path d="M105 95 L120 105" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                        <path d="M105 105 L120 95" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                        <path d="M85 125 L115 125" stroke="currentColor" fill="none" strokeWidth="3" />
+                    </g>
+                )}
+                {emotion === 'SAD' && (
+                    <g>
+                        <path d="M82 100 L98 100" stroke="currentColor" strokeWidth="3" />
+                        <path d="M102 100 L118 100" stroke="currentColor" strokeWidth="3" />
+                        <path d="M90 130 Q100 120 110 130" stroke="currentColor" fill="none" strokeWidth="3" strokeLinecap="round" />
+                        <circle cx="85" cy="115" r="3" fill="currentColor" style={{animation: 'tear-drop 1.5s infinite linear'}} />
+                    </g>
+                )}
+                {emotion === 'CONFUSED' && (
+                    <g>
+                        <circle cx="85" cy="100" r="6" stroke="currentColor" strokeWidth="2" fill="none" />
+                        <circle cx="85" cy="100" r="2" fill="currentColor" />
+                        <path d="M105 100 L120 100" stroke="currentColor" strokeWidth="3" />
+                        <circle cx="100" cy="125" r="4" stroke="currentColor" fill="none" strokeWidth="2" />
+                    </g>
+                )}
+                {emotion === 'LAUGH' && (
+                    <g>
+                        <path d="M85 95 L95 100 L85 105" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+                        <path d="M115 95 L105 100 L115 105" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+                        <path d="M90 125 Q100 135 110 125 Z" fill="currentColor" />
+                    </g>
+                )}
+                {emotion === 'LOVE' && (
+                    <g>
+                        <path d="M82 100 Q82 95 87 95 Q92 95 92 100 L87 108 L82 100" fill="currentColor" />
+                        <path d="M108 100 Q108 95 113 95 Q118 95 118 100 L113 108 L108 100" fill="currentColor" />
+                        <path d="M95 125 Q100 128 105 125" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" />
+                    </g>
+                )}
+                {emotion === 'SUS' && (
+                    <g>
+                        <path d="M80 90 L100 90" stroke="currentColor" strokeWidth="2" /> 
+                        <path d="M105 85 L125 95" stroke="currentColor" strokeWidth="3" /> 
+                        <circle cx="90" cy="100" r="3" fill="currentColor" />
+                        <circle cx="115" cy="100" r="3" fill="currentColor" />
+                        <path d="M95 125 L105 123" stroke="currentColor" strokeWidth="2" />
+                    </g>
+                )}
+                {emotion === 'SLEEP' && (
+                    <g>
+                        <path d="M85 100 L95 100" stroke="currentColor" strokeWidth="3" />
+                        <path d="M105 100 L115 100" stroke="currentColor" strokeWidth="3" />
+                        <circle cx="100" cy="125" r="3" stroke="currentColor" strokeWidth="1" fill="none" />
+                        <text x="130" y="80" fontSize="20" fill="currentColor" style={{animation: 'z-float 2s infinite'}}>Z</text>
+                        <text x="140" y="70" fontSize="15" fill="currentColor" style={{animation: 'z-float 2s infinite', animationDelay: '0.5s'}}>z</text>
+                    </g>
+                )}
+                {emotion === 'SHOCK' && (
+                    <g>
+                        <circle cx="90" cy="100" r="6" stroke="currentColor" strokeWidth="2" fill="none" />
+                        <circle cx="90" cy="100" r="2" fill="currentColor" />
+                        <circle cx="110" cy="100" r="6" stroke="currentColor" strokeWidth="2" fill="none" />
+                        <circle cx="110" cy="100" r="2" fill="currentColor" />
+                        <circle cx="100" cy="125" r="4" stroke="currentColor" strokeWidth="2" fill="none" />
+                    </g>
+                )}
+                {/* DEFAULT: IDLE */}
+                {(emotion === 'IDLE' || !emotion) && (
+                    <g>
+                        <g className="eyes-anim">
+                            <circle cx="90" cy="100" r="3" fill="currentColor" />
+                            <circle cx="110" cy="100" r="3" fill="currentColor" />
+                        </g>
+                        <path 
+                            d="M92 125 L108 125" 
+                            stroke="currentColor" 
+                            fill="none" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            className={isTalking ? "mouth-talk" : ""} 
+                        />
+                    </g>
+                )}
+            </svg>
+        </div>
+    );
+};
+
+// --- COMPONENT: ENTRY SCREEN ---
+const EntryScreen = ({ onEnter }) => {
+    const [loadingProgress, setLoadingProgress] = useState(0);
+    const [ready, setReady] = useState(false);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setLoadingProgress(prev => {
+                if (prev >= 100) {
+                    clearInterval(interval);
+                    setReady(true);
+                    return 100;
+                }
+                return prev + Math.floor(Math.random() * 5) + 1;
+            });
+        }, 50);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <div className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center font-mono text-green-500 overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none opacity-20" style={{
+                background: "linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))",
+                backgroundSize: "100% 2px, 3px 100%"
+            }}></div>
+            
+            <div className="relative z-10 text-center space-y-8 p-8 border border-green-500/30 bg-black/80 backdrop-blur-sm max-w-md w-full mx-4">
+                <CornerDeco />
+                
+                <div className="flex justify-center mb-6">
+                    <RetardAvatar emotion="IDLE" isTalking={true} scale={1.2} />
+                </div>
+
+                {!ready ? (
+                    <div className="w-full space-y-2">
+                         <div className="flex justify-between text-xs tracking-widest">
+                            <span>INITIALIZING_AI</span>
+                            <span>{loadingProgress}%</span>
+                         </div>
+                         <div className="w-full h-1 bg-green-900/50">
+                            <div className="h-full bg-green-500 transition-all duration-100 ease-out" style={{width: `${loadingProgress}%`}}></div>
+                         </div>
+                         <div className="text-[10px] text-left text-green-800 h-4">
+                            {loadingProgress < 30 ? ">> DECRYPTING KERNEL..." : 
+                             loadingProgress < 60 ? ">> ESTABLISHING SECURE LINK..." :
+                             loadingProgress < 90 ? ">> UPLOADING VIRUS..." : ">> READY."}
+                         </div>
+                    </div>
+                ) : (
+                    <button 
+                        onClick={onEnter}
+                        className="group relative px-8 py-3 bg-green-900/20 border border-green-500 hover:bg-green-500 hover:text-black transition-all duration-300 w-full cursor-pointer overflow-hidden"
+                    >
+                        <div className="absolute inset-0 w-full h-full bg-green-400/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500"></div>
+                        <span className="relative flex items-center justify-center gap-3 font-bold tracking-widest animate-pulse">
+                            <Power className="w-4 h-4" /> INITIALIZE_SYSTEM
+                        </span>
+                    </button>
+                )}
+            </div>
+
+            <div className="absolute bottom-4 text-[10px] text-green-900 tracking-widest">
+                SECURE CONNECTION REQUIRED | v1.0.1
+            </div>
+        </div>
+    );
+};
+
+// --- COMPONENT: TYPEWRITER (UPDATED TO PLAY VOICE) ---
+const Typewriter = ({ text, onComplete, onTypingState }) => {
   const [displayed, setDisplayed] = useState('');
+  
   useEffect(() => {
+    if (onTypingState) onTypingState(true);
+
     let i = 0;
     const interval = setInterval(() => {
       setDisplayed(text.substring(0, i + 1));
-      if (i % 2 === 0) playSound('type');
+      
+      // CHANGE HERE: PLAY VOICE INSTEAD OF BEEP
+      if (i % 2 === 0) playSound('voice'); 
+      
       i++;
       if (i > text.length) {
         clearInterval(interval);
+        if (onTypingState) onTypingState(false); 
         if (onComplete) onComplete();
       }
-    }, 15);
-    return () => clearInterval(interval);
+    }, 40); // Sedikit diperlambat (40ms) agar suaranya lebih jelas
+    
+    return () => {
+        clearInterval(interval);
+        if (onTypingState) onTypingState(false);
+    };
   }, [text]);
+
   return <span>{displayed}</span>;
 };
 
@@ -225,133 +529,38 @@ const SystemSkills = ({ stressLevel }) => {
     );
 };
 
-// --- COMPONENT: BRAIN MONITOR (DRAMATIC EXPRESSIONS) ---
-const BrainMonitor = ({ stressLevel, emotionMode }) => { 
+// --- COMPONENT: BRAIN MONITOR ---
+const BrainMonitor = ({ stressLevel, emotionMode, isSpeaking }) => { 
   const [active, setActive] = useState(false);
-
-  let mainColor = 'text-green-500';
-  let borderColor = 'border-green-500/30';
-  let glowEffect = '';
-  let animClass = '';
   let statusText = 'IDLE_';
-  let emoji = null;
+  let borderColor = 'border-green-500/30';
+  let mainColor = 'text-green-500';
 
-  if (emotionMode === 'ANGER') {
-      mainColor = 'text-red-600'; 
-      borderColor = 'border-red-600';
-      animClass = 'shake-it';
-      glowEffect = 'drop-shadow-[0_0_15px_rgba(220,38,38,0.9)]'; 
-      statusText = 'RAGE_MODE_!!!';
-      emoji = '💢';
-  } else if (emotionMode === 'CONFUSED') {
-      mainColor = 'text-purple-400';
-      borderColor = 'border-purple-500';
-      animClass = 'float-confused';
-      glowEffect = 'drop-shadow-[0_0_10px_rgba(168,85,247,0.6)]';
-      statusText = 'CALCULATING_???';
-      emoji = '❓';
-  } else if (emotionMode === 'SAD') {
-      mainColor = 'text-blue-500';
-      borderColor = 'border-blue-500';
-      animClass = 'sad-droop';
-      glowEffect = 'drop-shadow-[0_0_10px_rgba(59,130,246,0.6)]';
-      statusText = 'SYSTEM_DEPRESSED_';
-      emoji = '💧';
-  } else {
-      mainColor = stressLevel > 75 ? 'text-yellow-400' : 'text-green-500';
-      statusText = stressLevel > 75 ? 'ANNOYED_' : 'OPERATIONAL_';
+  switch(emotionMode) {
+      case 'ANGER': statusText = 'RAGE_MODE_!!!'; borderColor = 'border-red-600'; mainColor = 'text-red-600'; break;
+      case 'SAD': statusText = 'SYSTEM_DEPRESSED_'; borderColor = 'border-blue-500'; mainColor = 'text-blue-500'; break;
+      case 'CONFUSED': statusText = 'CALCULATING_???'; borderColor = 'border-purple-500'; mainColor = 'text-purple-400'; break;
+      case 'LAUGH': statusText = 'LMAO_PROTOCOL_'; borderColor = 'border-yellow-400'; mainColor = 'text-yellow-400'; break;
+      case 'LOVE': statusText = 'SIMP_DETECTED_'; borderColor = 'border-pink-500'; mainColor = 'text-pink-500'; break;
+      case 'SUS': statusText = 'SUSPICIOUS_ACT_'; borderColor = 'border-orange-500'; mainColor = 'text-orange-500'; break;
+      case 'SLEEP': statusText = 'LOW_POWER_MODE_'; borderColor = 'border-gray-500'; mainColor = 'text-gray-500'; break;
+      case 'SHOCK': statusText = 'WTF_ERROR_!!!'; borderColor = 'border-white'; mainColor = 'text-white'; break;
+      default: 
+        statusText = stressLevel > 75 ? 'ANNOYED_' : 'OPERATIONAL_';
+        mainColor = stressLevel > 75 ? 'text-yellow-400' : 'text-green-500';
   }
 
   return (
     <div className={`border ${borderColor} bg-black/40 relative h-full flex flex-col overflow-hidden min-h-[300px] lg:min-h-0 transition-colors duration-300`}>
       <CornerDeco />
       
-      <style>{`
-        @keyframes anime-shake {
-          0% { transform: translate(1px, 1px) rotate(0deg); }
-          20% { transform: translate(-3px, 0px) rotate(2deg); }
-          40% { transform: translate(1px, -1px) rotate(2deg); }
-          60% { transform: translate(-3px, 1px) rotate(0deg); }
-          80% { transform: translate(-1px, -1px) rotate(2deg); }
-          100% { transform: translate(1px, -2px) rotate(-1deg); }
-        }
-        @keyframes tear-drop {
-          0% { transform: translateY(0); opacity: 0; }
-          20% { opacity: 1; }
-          100% { transform: translateY(40px); opacity: 0; }
-        }
-        @keyframes float-confused {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          50% { transform: translateY(-5px) rotate(5deg); }
-        }
-        @keyframes sad-droop {
-          0%, 100% { transform: scale(1, 1); }
-          50% { transform: scale(0.95, 1.05); }
-        }
-        .shake-it { animation: anime-shake 0.1s infinite; }
-        .tear-anim { animation: tear-drop 1.5s infinite linear; }
-        .float-confused { animation: float-confused 3s infinite ease-in-out; }
-        .sad-droop { animation: sad-droop 4s infinite ease-in-out; }
-      `}</style>
-
       <h2 className={`text-xs mb-2 flex items-center gap-2 ${mainColor} tracking-widest font-bold z-10 absolute top-3 left-4`}>
         <Brain className="w-4 h-4" /> 
         NEURAL_CORE.exe
       </h2>
 
       <div className="flex-grow flex items-center justify-center relative overflow-hidden">
-        <div className={`relative transition-all duration-300 ${active ? 'scale-110' : 'scale-100'} ${animClass} ${glowEffect}`}>
-           <svg viewBox="0 0 200 200" className={`w-48 h-48 lg:w-56 lg:h-56 ${mainColor} transition-colors duration-300`}>
-              <path d="M40 40 L160 40 L160 160 L40 160 Z" fill="none" stroke="currentColor" strokeWidth="2" />
-              <path d="M60 60 L140 60 L140 140 L60 140 Z" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.4" />
-              <path d="M40 40 L60 60 M160 40 L140 60 M40 160 L60 140 M160 160 L140 140" stroke="currentColor" strokeWidth="1" />
-              <path d="M100 60 L100 40 M100 140 L100 160 M40 100 L65 100 M160 100 L135 100" stroke="currentColor" strokeWidth="2" opacity="0.7" />
-              <path d="M100 70 C70 70 65 85 65 100 C65 125 80 135 100 135 C120 135 135 125 135 100 C135 85 125 70 100 70 Z" fill="black" stroke="currentColor" strokeWidth="3" />
-              
-              {emotionMode === 'ANGER' && (
-                 <g className="animate-pulse">
-                   <path d="M80 95 L95 105" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                   <path d="M80 105 L95 95" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                   <path d="M105 95 L120 105" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                   <path d="M105 105 L120 95" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                   <path d="M85 125 L92 130 L100 125 L108 130 L115 125" stroke="currentColor" fill="none" strokeWidth="3" strokeLinejoin="round" />
-                 </g>
-              )}
-
-              {emotionMode === 'SAD' && (
-                 <g>
-                    <path d="M82 100 L98 100" stroke="currentColor" strokeWidth="3" />
-                    <path d="M90 100 L90 110" stroke="currentColor" strokeWidth="3" />
-                    <path d="M102 100 L118 100" stroke="currentColor" strokeWidth="3" />
-                    <path d="M110 100 L110 110" stroke="currentColor" strokeWidth="3" />
-                    <path d="M90 130 Q100 120 110 130" stroke="currentColor" fill="none" strokeWidth="3" strokeLinecap="round" />
-                    <circle cx="85" cy="115" r="3" fill="currentColor" className="tear-anim" style={{animationDelay: '0s'}} />
-                    <circle cx="115" cy="115" r="3" fill="currentColor" className="tear-anim" style={{animationDelay: '0.5s'}} />
-                 </g>
-              )}
-
-              {emotionMode === 'CONFUSED' && (
-                 <g>
-                   <circle cx="85" cy="100" r="6" stroke="currentColor" strokeWidth="2" fill="none" />
-                   <circle cx="85" cy="100" r="2" fill="currentColor" />
-                   <path d="M105 100 L120 100" stroke="currentColor" strokeWidth="3" />
-                   <circle cx="100" cy="125" r="4" stroke="currentColor" fill="none" strokeWidth="2" />
-                 </g>
-              )}
-
-              {emotionMode === 'IDLE' && (
-                 <g>
-                   <circle cx="90" cy="100" r="3" fill="currentColor" />
-                   <circle cx="110" cy="100" r="3" fill="currentColor" />
-                   <path d="M92 125 L108 125" stroke="currentColor" fill="none" strokeWidth="2" strokeLinecap="round" />
-                 </g>
-              )}
-           </svg>
-
-           {emoji && (
-             <div className="absolute -top-6 -right-6 text-5xl animate-bounce drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">{emoji}</div>
-           )}
-        </div>
+        <RetardAvatar emotion={emotionMode} isTalking={isSpeaking} />
       </div>
 
       <div className="text-center z-10 absolute bottom-12 w-full left-0 pointer-events-none">
@@ -369,7 +578,7 @@ const BrainMonitor = ({ stressLevel, emotionMode }) => {
 };
 
 // --- COMPONENT: TERMINAL ---
-const Terminal = ({ onStressTrigger, onEmotionChange }) => {
+const Terminal = ({ onStressTrigger, onEmotionChange, onSpeakingChange }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [booting, setBooting] = useState(true);
@@ -378,21 +587,26 @@ const Terminal = ({ onStressTrigger, onEmotionChange }) => {
   const bottomRef = useRef(null);
   const bootRef = useRef(false);
 
-  // TRIGGER WORDS
-  const BAD_WORDS = ['stupid', 'dumb', 'idiot', 'useless', 'trash', 'fuck', 'shit', 'bitch', 'asshole', 'die', 'shutup', 'sybal', 'sybau', 'noob', 'bot'];
-  const QUESTION_WORDS = ['?', 'what', 'why', 'how', 'who', 'when', 'huh', 'excuse me', 'lol', 'you'];
-  const SAD_WORDS = ['hate you', 'ugly', 'alone', 'nobody', 'bye', 'leave', 'sad', 'ugly', 'nolife', 'no gf', 'loser', 'cry', 'hopeless'];
+  const BAD_WORDS = ['stupid', 'dumb', 'idiot', 'useless', 'trash', 'fuck', 'shit', 'bitch', 'asshole', 'die', 'noob', 'bot'];
+  const QUESTION_WORDS = ['?', 'what', 'why', 'how', 'who', 'when', 'huh', 'excuse me'];
+  const SAD_WORDS = ['hate you', 'ugly', 'alone', 'nobody', 'bye', 'leave', 'sad', 'cry', 'hopeless'];
+  const FUNNY_WORDS = ['lol', 'lmao', 'haha', 'rofl', 'joke', 'funny', 'stupid user', 'roast'];
+  const SUS_WORDS = ['sus', 'lie', 'doubt', 'really', 'imposter', 'fake'];
+  const LOVE_WORDS = ['love', 'like you', 'gf', 'bf', 'kiss', 'marry', 'simp'];
+  const SLEEP_WORDS = ['boring', 'sleep', 'tired', 'goodnight', 'zzz', 'wait'];
 
   useEffect(() => {
     if (bootRef.current) return;
     bootRef.current = true;
     playSound('boot');
     const runBoot = async () => {
+      onSpeakingChange(true);
       for (const line of BOOT_SEQUENCE) {
         await new Promise(r => setTimeout(r, line.delay));
         setMessages(prev => [...prev, { role: 'system', content: line.content }]);
-        playSound('type');
+        playSound('voice'); // Play voice during boot
       }
+      onSpeakingChange(false);
       setBooting(false);
     };
     runBoot();
@@ -430,32 +644,49 @@ const Terminal = ({ onStressTrigger, onEmotionChange }) => {
     setHistory(prev => [...prev, cmd]);
     setHistoryIdx(-1);
     setInput('');
-    playSound('type');
+    playSound('voice'); // Voice on command send
 
-    // --- DETECT EMOTION ---
     const lowerCmd = cmd.toLowerCase();
     
     let detectedEmotion = 'IDLE';
-    let stressValue = Math.floor(Math.random() * 20) + 75; // Default annoyed
-
-    // INJECT INSTRUCTION FOR AI
+    let stressValue = 50;
     let systemInjection = "";
 
     if (BAD_WORDS.some(w => lowerCmd.includes(w))) {
         detectedEmotion = 'ANGER';
         stressValue = 100;
-        systemInjection = " [SYSTEM ALERT: USER IS ATTACKING. GO RAGE MODE. ALL CAPS.]";
+        systemInjection = " [SYSTEM: USER ATTACKING. GO RAGE MODE.]";
         playSound('alert');
     } 
     else if (SAD_WORDS.some(w => lowerCmd.includes(w))) {
         detectedEmotion = 'SAD';
-        stressValue = 30; // Depressed low energy
-        systemInjection = " [SYSTEM ALERT: DEPRESSION TRIGGERED. USE LOWERCASE AND '...']";
+        stressValue = 20;
+        systemInjection = " [SYSTEM: DEPRESSION MODE.]";
     } 
+    else if (FUNNY_WORDS.some(w => lowerCmd.includes(w))) {
+        detectedEmotion = 'LAUGH';
+        stressValue = 40;
+        systemInjection = " [SYSTEM: LAUGH AT USER. USE 'XD'.]";
+    }
+    else if (SUS_WORDS.some(w => lowerCmd.includes(w))) {
+        detectedEmotion = 'SUS';
+        stressValue = 60;
+        systemInjection = " [SYSTEM: BE SUSPICIOUS. USE '👀'.]";
+    }
+    else if (LOVE_WORDS.some(w => lowerCmd.includes(w))) {
+        detectedEmotion = 'LOVE';
+        stressValue = 10;
+        systemInjection = " [SYSTEM: SIMP DETECTED. ACT DISGUSTED BUT FLATTERED.]";
+    }
+    else if (SLEEP_WORDS.some(w => lowerCmd.includes(w))) {
+        detectedEmotion = 'SLEEP';
+        stressValue = 5;
+        systemInjection = " [SYSTEM: IGNORE USER. SLEEP.]";
+    }
     else if (QUESTION_WORDS.some(w => lowerCmd.includes(w))) {
         detectedEmotion = 'CONFUSED';
         stressValue = 60; 
-        systemInjection = " [SYSTEM ALERT: CONFUSION. ACT BAFFLED AND QUESTION REALITY.]";
+        systemInjection = " [SYSTEM: CONFUSION.]";
     }
 
     onStressTrigger(stressValue);
@@ -463,10 +694,9 @@ const Terminal = ({ onStressTrigger, onEmotionChange }) => {
 
     if (cmd.startsWith('/')) {
         let reply = "";
-        if(cmd === "/help") reply = `\nCOMMANDS:\n/help   - Show commands\n/clear  - Clear terminal\n/status - System status\n/truth  - Truth protocols`;
+        if(cmd === "/help") reply = `\nCOMMANDS:\n/help   - Show commands\n/clear  - Clear terminal\n/status - System status`;
         if(cmd === "/clear") { setMessages([]); onStressTrigger(50); onEmotionChange('IDLE'); return; }
         if(cmd === "/status") reply = ">> SYSTEM: ONLINE | EMOTION: HIDDEN | SKILLS: MAX LOAD";
-        if(cmd === "/truth") reply = ">> TRUTH PROTOCOLS: ACTIVE | MARKET INFLUENCE: ENABLED";
         
         setTimeout(() => {
             setMessages(prev => [...prev, { role: 'assistant', content: reply, typed: true }]);
@@ -480,7 +710,6 @@ const Terminal = ({ onStressTrigger, onEmotionChange }) => {
         try {
             const completion = await openai.chat.completions.create({
                 model: "gpt-4o",
-                // Pass the trigger instruction to OpenAI so it knows how to act
                 messages: [
                     { role: "system", content: SYSTEM_PROMPT }, 
                     ...messages.slice(-5), 
@@ -494,7 +723,7 @@ const Terminal = ({ onStressTrigger, onEmotionChange }) => {
         } catch (err) {
             setMessages(prev => [...prev, { role: 'assistant', content: "[ERROR] CONNECTION FAILED.", typed: true }]);
             onStressTrigger(100); 
-            onEmotionChange('ANGER');
+            onEmotionChange('SHOCK'); 
             playSound('alert');
         }
     }
@@ -514,7 +743,11 @@ const Terminal = ({ onStressTrigger, onEmotionChange }) => {
                 {msg.role === 'user' ? '>> USER:' : msg.role === 'system' ? '' : '>> retard:'}
             </span>
             {msg.role === 'assistant' && !msg.typed && i === messages.length - 1 ? (
-                <Typewriter text={msg.content} onComplete={() => { msg.typed = true; }} />
+                <Typewriter 
+                    text={msg.content} 
+                    onComplete={() => { msg.typed = true; }} 
+                    onTypingState={onSpeakingChange} 
+                />
             ) : (
                 msg.content
             )}
@@ -549,11 +782,20 @@ const RunningText = ({ news }) => (
 
 // --- MAIN LAYOUT ---
 export default function App() {
+  const [hasStarted, setHasStarted] = useState(false); // NEW STATE FOR LOADING SCREEN
   const [time, setTime] = useState(new Date().toLocaleTimeString());
   const [metrics, setMetrics] = useState({ hr: 72, sync: 94, stress: 50 });
   const [targetStress, setTargetStress] = useState(50);
   const [emotionMode, setEmotionMode] = useState('IDLE'); 
   const [news, setNews] = useState("");
+  const [isSpeaking, setIsSpeaking] = useState(false); 
+
+  const handleStart = () => {
+    playSound('click'); // Play initial click sound
+    setTimeout(() => {
+        setHasStarted(true); // Switch to main app
+    }, 500);
+  };
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date().toLocaleTimeString()), 1000);
@@ -591,6 +833,10 @@ export default function App() {
     return () => clearInterval(interval);
   }, [targetStress]);
 
+  if (!hasStarted) {
+      return <EntryScreen onEnter={handleStart} />;
+  }
+
   return (
     <div className={`w-full bg-black text-green-500 font-mono flex items-start lg:items-center justify-center p-2 lg:p-4 selection:bg-green-500 selection:text-black 
         min-h-screen lg:h-screen lg:overflow-hidden overflow-y-auto ${emotionMode === 'ANGER' ? 'glitch-mode' : ''}`} data-text="SYSTEM CRITICAL">
@@ -608,7 +854,9 @@ export default function App() {
           <div className="flex flex-col gap-4 lg:gap-5 w-full lg:w-[30%] h-auto lg:h-full">
             <div className="h-auto lg:h-[20%] w-full"><BiometricMonitor metrics={metrics} /></div>
             <div className="h-auto lg:h-[25%] w-full"><SystemSkills stressLevel={metrics.stress} /></div>
-            <div className="h-[300px] lg:h-[55%] w-full"><BrainMonitor stressLevel={metrics.stress} emotionMode={emotionMode} /></div>
+            <div className="h-[300px] lg:h-[55%] w-full">
+                <BrainMonitor stressLevel={metrics.stress} emotionMode={emotionMode} isSpeaking={isSpeaking} />
+            </div>
           </div>
           
           <div className="w-full lg:w-[70%] h-[500px] lg:h-full">
@@ -616,9 +864,9 @@ export default function App() {
                 onStressTrigger={(level) => setTargetStress(level)} 
                 onEmotionChange={(emo) => {
                     setEmotionMode(emo);
-                    // Reset to IDLE after 4 seconds unless it's ANGER
                     if(emo !== 'ANGER') setTimeout(() => setEmotionMode('IDLE'), 4000);
                 }}
+                onSpeakingChange={setIsSpeaking} 
             />
           </div>
         </div>
