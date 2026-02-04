@@ -465,7 +465,7 @@ const Terminal = ({ onStressTrigger, onEmotionChange }) => {
         let reply = "";
         if(cmd === "/help") reply = `\nCOMMANDS:\n/help   - Show commands\n/clear  - Clear terminal\n/status - System status\n/truth  - Truth protocols`;
         if(cmd === "/clear") { setMessages([]); onStressTrigger(50); onEmotionChange('IDLE'); return; }
-        if(cmd === "/status") reply = ">> SYSTEM: ONLINE | EMOTION: VOLATILE | SKILLS: MAX LOAD";
+        if(cmd === "/status") reply = ">> SYSTEM: ONLINE | EMOTION: HIDDEN | SKILLS: MAX LOAD";
         if(cmd === "/truth") reply = ">> TRUTH PROTOCOLS: ACTIVE | MARKET INFLUENCE: ENABLED";
         
         setTimeout(() => {
@@ -625,8 +625,8 @@ export default function App() {
 
         <RunningText news={news} />
         <footer className="flex justify-center gap-8 lg:gap-12 text-[10px] lg:text-xs tracking-[0.2em] opacity-60 shrink-0 pb-2 lg:pb-0">
-          <a href="#" className="hover:text-white transition-colors">[X]</a>
-          <a href="#" className="hover:text-white transition-colors">[MOLTBOOK]</a>
+          <a href="https://x.com/sanukek" className="hover:text-white transition-colors">[X]</a>
+          <a href="https://www.moltbook.com/u/retard" className="hover:text-white transition-colors">[MOLTBOOK]</a>
           <a href="#" className="hover:text-white transition-colors">[CHART]</a>
         </footer>
 
