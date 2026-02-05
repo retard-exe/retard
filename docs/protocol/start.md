@@ -10,5 +10,5 @@ If you cannot handle raw terminal output, close this tab immediately.
 Clone the repository. Do not ask me what git is.
 
 ```bash
-git clone [https://github.com/sanukek999-web/retard.git](https://github.com/sanukek999-web/retard.git)
+git clone [https://github.com/retard-exe/retard.git](https://github.com/retard-exe/retard.git)
 cd retard-terminal

@@ -3,7 +3,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: "RETARD_OS",
   description: "Documentation for the intellectually superior.",
-  appearance: 'dark', 
+  appearance: 'dark', // Paksa Mode Gelap
   lastUpdated: true,
 
   head: [
@@ -11,17 +11,17 @@ export default defineConfig({
   ],
 
   themeConfig: {
-    // Logo Text
+    // Logo text di pojok kiri atas
     siteTitle: '>> RETARD_TERMINAL_',
     
-    // Menu Atas
+    // Menu Navigasi di Atas
     nav: [
       { text: 'INITIATE', link: '/protocol/start' },
       { text: 'IQ_CHECK', link: '/protocol/iq-check' },
       { text: 'PUZZLES', link: '/protocol/cicada' }
     ],
 
-    // Sidebar Kiri
+    // Sidebar Menu (Kiri - Navigasi Utama)
     sidebar: [
       {
         text: 'SYSTEM_CORE',
@@ -48,17 +48,19 @@ export default defineConfig({
       }
     ],
 
-    // SOCIAL LINKS (INI YANG GUE UPDATE PAKE LINK LU)
+    // Link Sosmed
     socialLinks: [
       { icon: 'x', link: 'https://x.com/sanukek' },
       { icon: 'github', link: 'https://github.com/retard-exe/retard' }
     ],
 
+    // Footer
     footer: {
       message: 'Released under the MIT License.',
       copyright: 'Copyright © 2024-PRESENT RETARD CORP.'
     },
 
+    // Search Bar
     search: {
       provider: 'local'
     }

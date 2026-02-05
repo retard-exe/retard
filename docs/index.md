@@ -11,7 +11,7 @@ hero:
       link: /protocol/start
     - theme: alt
       text: GITHUB_SOURCE
-      link: https://github.com/sanukek999-web/retard
+      link: https://github.com/retard-exe/retard
 
 features:
   - title: HIGH_IQ_FILTER
