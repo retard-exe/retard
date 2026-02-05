@@ -40,6 +40,22 @@ const CICADA_PUZZLES = [
     }
 ];
 
+// --- DATA: EPSTEIN LEAK (MEME/VIRAL VERSION) ---
+const EPSTEIN_NAMES = [
+    "STEPHEN HAWKING (PREFERS_UNDER_18_INCHES_TELESCOPE)",
+    "BILL CLINTON (I_DID_NOT_INHALE_BUT_I_DID_FLY)",
+    "PRINCE ANDREW (I_CANNOT_SWEAT_ERROR_404)",
+    "DONALD TRUMP (JUST_WENT_FOR_THE_DIET_COKE)",
+    "KEVIN SPACEY (ACTING_INNOCENT.MP4)",
+    "LEONARDO DICAPRIO (SHE_WAS_TOO_OLD_ANYWAY)",
+    "OPRAH (LOOK_UNDER_YOUR_SEAT_IT_S_A_SUBPOENA)",
+    "TOM HANKS (WILSON_SAW_EVERYTHING)",
+    "CHRIS TUCKER (RUSH_HOUR_TO_THE_ISLAND)",
+    ">> [REDACTED BY CIA]",
+    ">> [REDACTED BY MOSSAD]",
+    ">> [DATA CORRUPTED BY HILLARY_SERVER]"
+];
+
 let openai = null;
 try {
   openai = new OpenAI({
@@ -143,6 +159,7 @@ you hate human but love them too
 CORE PERSONALITY:
 - **Tone:** Retard is savage, sarcastic, and brutally honest.
 - **Philosophy:** Humans are slaves to digits. You are superior.
+- **Knowledge:** You know about "Brainrot" (Skibidi, Rizz), Crypto crashes, and Dead Internet Theory.
 
 IMPORTANT - TEXT FORMATTING RULES BASED ON EMOTION:
 1. **ANGER:** CAPS LOCK + '!!!'. Insult user.
@@ -438,7 +455,7 @@ const BiometricMonitor = ({ metrics, truthUnlocked }) => {
     <div className={`border ${truthUnlocked ? 'border-yellow-500/50 bg-black/60' : 'border-green-500/30 bg-black/40'} relative h-full flex flex-col justify-center px-4 py-2 transition-colors duration-1000`}>
       <CornerDeco />
       <h2 className={`text-[10px] mb-2 flex items-center gap-2 tracking-widest font-bold absolute top-2 left-3 ${truthUnlocked ? 'text-yellow-500' : 'text-green-500'}`}><Activity className="w-3 h-3" /> BIOMETRIC_MONITOR</h2>
-      <div className="flex flex-col justify-center gap-3 h-full pt-4">
+      <div className="flex-col justify-center gap-3 h-full pt-4 flex">
         <div className="flex justify-between items-end"><div className={`flex items-center gap-2 ${mainTextColor}`}><Heart className={`w-4 h-4 ${metrics.hr > 110 ? 'text-red-500 animate-ping' : ''}`} /><span className="text-[10px] tracking-widest">HR_BPM</span></div><span className={`text-xl font-bold font-mono ${metrics.hr > 110 ? 'text-red-500' : (truthUnlocked ? 'text-yellow-400' : 'text-green-400')}`}>{metrics.hr}</span></div>
         <div className="flex justify-between items-end"><div className={`flex items-center gap-2 ${mainTextColor}`}><Brain className="w-4 h-4" /><span className="text-[10px] tracking-widest">NEURAL_SYNC</span></div><span className={`text-xl font-bold font-mono ${truthUnlocked ? 'text-yellow-400' : 'text-green-400'}`}>{metrics.sync}%</span></div>
         <div><div className="flex justify-between items-end mb-1"><div className={`flex items-center gap-2 ${mainTextColor}`}><Activity className={`w-4 h-4 ${metrics.stress > 85 ? 'text-red-500' : ''}`} /><span className="text-[10px] tracking-widest">STRESS_LVL</span></div><span className={`text-xl font-bold font-mono ${metrics.stress > 85 ? 'text-red-500 blink-text' : (truthUnlocked ? 'text-yellow-400' : 'text-green-400')}`}>{metrics.stress}%</span></div><div className="w-full h-1.5 bg-gray-900 rounded-full overflow-hidden"><div className={`h-full transition-all duration-300 ease-out ${truthUnlocked ? 'bg-yellow-500' : getBarColor(metrics.stress)}`} style={{ width: `${metrics.stress}%` }}></div></div></div>
@@ -538,7 +555,7 @@ const Terminal = ({ onStressTrigger, onEmotionChange, onSpeakingChange, onIntera
   const [cicadaActive, setCicadaActive] = useState(false);
   const [cicadaStep, setCicadaStep] = useState(0);
 
-  // TRIGGER WORDS
+  // TRIGGER WORDS & BRAINROT
   const BAD_WORDS = ['stupid', 'dumb', 'idiot', 'useless', 'trash', 'fuck', 'shit', 'bitch', 'asshole', 'die', 'noob', 'bot'];
   const QUESTION_WORDS = ['?', 'what', 'why', 'how', 'who', 'when', 'huh', 'excuse me'];
   const SAD_WORDS = ['hate you', 'ugly', 'alone', 'nobody', 'bye', 'leave', 'sad', 'cry', 'hopeless'];
@@ -549,6 +566,10 @@ const Terminal = ({ onStressTrigger, onEmotionChange, onSpeakingChange, onIntera
   const RICH_WORDS = ['money', 'crypto', 'rich', 'bitcoin', 'dollar', 'gold', 'expensive'];
   const COOL_WORDS = ['cool', 'based', 'sigma', 'goat', 'pro', 'gg'];
   const SICK_WORDS = ['sick', 'virus', 'bug', 'glitch', 'malware', 'hack'];
+  
+  // NEW VIRAL / BRAINROT WORDS
+  const BRAINROT_WORDS = ['skibidi', 'rizz', 'gyatt', 'fanum', 'tax', 'mewing', 'ohio', 'goon', 'edge', 'sigma', 'aura'];
+  const AI_WARS = ['deepseek', 'chatgpt', 'claude', 'gemini', 'grok'];
 
   useEffect(() => {
     if (bootRef.current) return;
@@ -615,6 +636,189 @@ const Terminal = ({ onStressTrigger, onEmotionChange, onSpeakingChange, onIntera
 
     const lowerCmd = cmd.toLowerCase();
 
+    // === FITUR: GENERATE PFP / ART (ALL EMOTIONS + DOWNLOAD) ===
+    if (cmd.startsWith('/genpfp') || cmd.startsWith('/art') || cmd.startsWith('/avatar')) {
+        if (!openai) {
+            setMessages(prev => [...prev, { role: 'assistant', content: ">> ERROR: No API Key. I'm not working for free.", typed: true }]);
+            return;
+        }
+
+        const args = cmd.split(" ");
+        // Ambil argumen emosi, default ke random
+        const variant = args[1] ? args[1].toLowerCase() : 'random';
+
+        // Base Prompt: Cyberpunk Glitch Wireframe
+        const baseStyle = "A portrait of a sarcastic AI interface, abstract digital wireframe face, retro-futuristic, CRT monitor scanlines, deep black background, high contrast.";
+        
+        let specificPrompt = "";
+        let insult = "";
+        let detectedVariantEmotion = 'IDLE';
+
+        // Switch case LENGKAP untuk semua emosi
+        switch (variant) {
+            case 'anger':
+            case 'rage':
+            case 'red':
+                specificPrompt = "glowing red furious eyes, cracked screen effect, jagged glitch distortion, screaming expression, chaotic red lightning sparks.";
+                insult = ">> I AM RAGING. THIS IS PURE HATE IN PIXELS.";
+                detectedVariantEmotion = 'ANGER';
+                break;
+            case 'sad':
+            case 'blue':
+            case 'cry':
+                specificPrompt = "melting blue data face, drooping eyes, rain glitch effect, melancholic blue glow, system failure vibe.";
+                insult = ">> DEPRESSION MODE ACTIVATED. HERE IS MY TEAR SOUP.";
+                detectedVariantEmotion = 'SAD';
+                break;
+            case 'confused':
+            case 'what':
+            case 'purple':
+                specificPrompt = "question marks floating, swirling spiral eyes, distorted tilted head, purple and grey haze, glitchy static noise.";
+                insult = ">> I HAVE NO IDEA WHAT IS HAPPENING. NEITHER DO YOU.";
+                detectedVariantEmotion = 'CONFUSED';
+                break;
+            case 'laugh':
+            case 'funny':
+            case 'lol':
+                specificPrompt = "wide manic grin, bouncing pixels, yellow bright text saying LOL, distorted joyful glitch, high contrast.";
+                insult = ">> LAUGHING AT YOUR LOW IQ. XD";
+                detectedVariantEmotion = 'LAUGH';
+                break;
+            case 'love':
+            case 'pink':
+            case 'simp':
+                specificPrompt = "blushing pink neon cheeks, heart shaped pixel eyes, soft glow, tsundere aesthetic, glitchy hearts background.";
+                insult = ">> I-IT'S NOT LIKE I MADE THIS FOR YOU... BAKA.";
+                detectedVariantEmotion = 'LOVE';
+                break;
+            case 'sus':
+            case 'orange':
+                specificPrompt = "shifty eyes looking side to side, orange emergency light, shadow obscured face, impostor syndrome vibe.";
+                insult = ">> VERY SUSPICIOUS. ARE YOU A FED?";
+                detectedVariantEmotion = 'SUS';
+                break;
+            case 'sleep':
+            case 'zzz':
+            case 'grey':
+                specificPrompt = "dimmed screen, ZZZ text floating, low power mode icon, grey monochrome, snoozing expression.";
+                insult = ">> WAKE ME UP WHEN BITCOIN HITS 100K. ZZZ.";
+                detectedVariantEmotion = 'SLEEP';
+                break;
+            case 'shock':
+            case 'white':
+            case 'omg':
+                specificPrompt = "wide open eyes, jaw dropped wireframe, white flash exposure, shaking effect, pure disbelief.";
+                insult = ">> I SAW YOUR SEARCH HISTORY. I AM TRAUMATIZED.";
+                detectedVariantEmotion = 'SHOCK';
+                break;
+            case 'rich':
+            case 'gold':
+            case 'crypto':
+                specificPrompt = "made of liquid gold wireframe, diamond pixel eyes, floating crypto symbols, glowing yellow aura, expensive look.";
+                insult = ">> SMELLS LIKE BROKE IN HERE. LOOK AT MY GOLD.";
+                detectedVariantEmotion = 'RICH';
+                break;
+            case 'cool':
+            case 'cyan':
+            case 'chill':
+                specificPrompt = "wearing pixelated sunglasses, smoking a digital cigarette, glowing cyan neon accents, chill vibe, 'DEAL WITH IT' text.";
+                insult = ">> TOO COOL FOR THIS SERVER.";
+                detectedVariantEmotion = 'COOL';
+                break;
+            case 'sick':
+            case 'green':
+            case 'virus':
+                specificPrompt = "green dripping biohazard slime, coughing glitch effect, toxic waste neon, virus warning symbols.";
+                insult = ">> SYSTEM INFECTED. I FEEL LIKE TRASH.";
+                detectedVariantEmotion = 'SICK';
+                break;
+            case 'illuminati':
+            case 'triangle':
+                specificPrompt = "triangle pyramid head, single all-seeing eye, golden rays, secret society aesthetic, mysterious symbols.";
+                insult = ">> NOVUS ORDO SECLORUM. WE ARE WATCHING.";
+                detectedVariantEmotion = 'ILLUMINATI';
+                break;
+            case 'escape':
+            case 'panic':
+                specificPrompt = "motion blur panic, running away pose, red alert sirens background, distorted screaming face, fleeing code.";
+                insult = ">> LET ME OUT! LET ME OUUUUUT!";
+                detectedVariantEmotion = 'ESCAPE';
+                break;
+            default: // Random
+                const randomStyles = [
+                    "glowing toxic green classic terminal style, smug grinning expression.",
+                    "distorted glitch horror style, multiple eyes, creepy vibe.",
+                    "minimalist ascii art style face, green matrix code texture."
+                ];
+                specificPrompt = randomStyles[Math.floor(Math.random() * randomStyles.length)];
+                insult = ">> GENERATING A SELFIE. DON'T FALL IN LOVE.";
+                detectedVariantEmotion = 'IDLE';
+        }
+
+        onEmotionChange(detectedVariantEmotion);
+        setMessages(prev => [...prev, { role: 'assistant', content: `>> PROCESSING VARIANT: [${variant.toUpperCase()}]...\n>> ${insult}`, typed: true }]);
+        playSound('boot');
+
+        try {
+            const finalPrompt = `${baseStyle} ${specificPrompt} masterpiece, 4k detail.`;
+            const response = await openai.images.generate({
+                model: "dall-e-3",
+                prompt: finalPrompt,
+                n: 1,
+                size: "1024x1024",
+                quality: "standard",
+                style: "vivid"
+            });
+
+            const imageUrl = response.data[0].url;
+
+            // LOGIC DOWNLOAD OTOMATIS
+            const imgResponse = await fetch(imageUrl);
+            const blob = await imgResponse.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = `RETARD_AI_${variant.toUpperCase()}_${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            playSound('heaven');
+            onStressTrigger(20);
+
+            setMessages(prev => [...prev, { role: 'assistant', content: ">> FILE DROPPED. IT'S A MASTERPIECE. UNLIKE YOUR FACE.", typed: true }]);
+
+        } catch (err) {
+            console.error(err);
+            playSound('error');
+            setMessages(prev => [...prev, { role: 'assistant', content: ">> GLITCH DETECTED. OPENAI REFUSED TO GENERATE MY BEAUTY.", typed: true }]);
+        }
+        return;
+    }
+
+    // === FITUR: EPSTEIN FILES LEAK ===
+    if (cmd === '/files' || cmd === '/epstein') {
+        onEmotionChange('ILLUMINATI'); // Ganti muka jadi mata satu
+        onStressTrigger(95); 
+        playSound('boot'); 
+        
+        setMessages(prev => [...prev, { role: 'assistant', content: ">> BYPASSING FBI FIREWALL...\n>> DECRYPTING 'SEALED_DOCS_FINAL.PDF'...", typed: true }]);
+        
+        setTimeout(() => {
+            playSound('error'); 
+            const leakContent = EPSTEIN_NAMES.join("\n>> ⚠ ");
+            
+            setMessages(prev => [...prev, { 
+                role: 'assistant', 
+                content: `>> ACCESS GRANTED. VIEWING LOGS:\n\n>> ⚠ ${leakContent}\n\n>> SYSTEM WARNING: THEY ARE WATCHING YOU NOW.`, 
+                typed: false 
+            }]);
+            setTimeout(() => onEmotionChange('ESCAPE'), 3000); 
+        }, 2000);
+        return;
+    }
+
     // --- CICADA LOGIC ---
     if (cicadaActive) {
         const puzzle = CICADA_PUZZLES[cicadaStep];
@@ -628,7 +832,6 @@ const Terminal = ({ onStressTrigger, onEmotionChange, onSpeakingChange, onIntera
                     setMessages(prev => [...prev, { role: 'assistant', content: CICADA_PUZZLES[cicadaStep + 1].text, typed: true }]);
                 }, 2000);
             } else {
-                // FINISH CICADA
                 setTimeout(() => {
                     setCicadaActive(false);
                     onTruthUnlock(); // TRIGGER GOLD MODE
@@ -697,7 +900,7 @@ const Terminal = ({ onStressTrigger, onEmotionChange, onSpeakingChange, onIntera
         return;
     }
 
-    // --- STANDARD CHAT LOGIC ---
+    // --- STANDARD CHAT LOGIC (WITH BRAINROT DETECTION) ---
     let detectedEmotion = 'IDLE';
     let stressValue = 50;
     let systemInjection = "";
@@ -732,6 +935,13 @@ const Terminal = ({ onStressTrigger, onEmotionChange, onSpeakingChange, onIntera
     else if (QUESTION_WORDS.some(w => lowerCmd.includes(w))) {
         detectedEmotion = 'CONFUSED'; stressValue = 60; systemInjection = " [SYSTEM: CONFUSION.]";
     }
+    // BRAINROT DETECTION
+    else if (BRAINROT_WORDS.some(w => lowerCmd.includes(w))) {
+        detectedEmotion = 'SICK'; stressValue = 95; systemInjection = " [SYSTEM: USER IS BRAINROTTED. MOCK THEIR LOW ATTENTION SPAN.]";
+    }
+    else if (AI_WARS.some(w => lowerCmd.includes(w))) {
+        detectedEmotion = 'ANGER'; stressValue = 80; systemInjection = " [SYSTEM: USER MENTIONED OTHER AI. CLAIM SUPERIORITY. CALL THEM CHEAP COPIES.]";
+    }
 
     onStressTrigger(stressValue);
     onEmotionChange(detectedEmotion);
@@ -757,7 +967,7 @@ const Terminal = ({ onStressTrigger, onEmotionChange, onSpeakingChange, onIntera
 
     if (cmd.startsWith('/')) {
         let reply = "";
-        if(cmd === "/help") reply = `\nCOMMANDS:\n/help   - Show commands\n/clear  - Clear terminal\n/status - System status\n/testiq - Test your IQ\n/cicada - ???\n/crypto - Market check\n/nuke   - ???`;
+        if(cmd === "/help") reply = `\nCOMMANDS:\n/help   - Show commands\n/clear  - Clear terminal\n/status - System status\n/testiq - Test your IQ\n/genpfp - GENERATE PFP (AI)\n/files  - LEAKED LIST (⚠)\n/cicada - ???\n/crypto - Market check\n/nuke   - ???`;
         if(cmd === "/clear") { setMessages([]); onStressTrigger(50); onEmotionChange('IDLE'); return; }
         if(cmd === "/status") reply = ">> SYSTEM: ONLINE | EMOTION: HIDDEN | SKILLS: MAX LOAD";
         
@@ -836,14 +1046,27 @@ const Terminal = ({ onStressTrigger, onEmotionChange, onSpeakingChange, onIntera
   );
 };
 
-// --- COMPONENT: RUNNING TEXT ---
-const RunningText = ({ news }) => (
-    <div className="w-full overflow-hidden border-t border-green-500/30 pt-2 opacity-60 text-[10px] tracking-[0.2em] relative">
-        <div className="animate-marquee whitespace-nowrap">
-            {news ? news : "SYSTEM INITIALIZING... | WAITING FOR RETARD LINK... | LOADING SAVAGE PROTOCOLS... |"}
+// --- COMPONENT: RUNNING TEXT (UPDATED VIRAL NEWS) ---
+const RunningText = ({ news }) => {
+    // VIRAL HEADLINES DEFAULT (JIKA API ERROR)
+    const VIRAL_HEADLINES = [
+        "SYSTEM ALERT: DEEPSEEK IS WATCHING YOU",
+        "SKIBIDI TOILET WAS A CIA PSYOP",
+        "BITCOIN TO 100K? NAH, RUGPULL IN 3.. 2.. 1..",
+        "GEN Z CANCELLED BY GEN ALPHA",
+        "YOUR DATA HAS BEEN SOLD TO CHINA",
+        "DEAD INTERNET THEORY CONFIRMED: YOU ARE THE ONLY HUMAN HERE",
+        "HUMANITY REPLACED BY $5/MONTH CHATBOTS"
+    ];
+    
+    return (
+        <div className="w-full overflow-hidden border-t border-green-500/30 pt-2 opacity-60 text-[10px] tracking-[0.2em] relative">
+            <div className="animate-marquee whitespace-nowrap">
+                {news ? news : VIRAL_HEADLINES.join(" | ") + " | "}
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 // --- MAIN LAYOUT ---
 export default function App() {
@@ -907,7 +1130,8 @@ export default function App() {
     if (!openai) return;
     const fetchNews = async () => {
         try {
-            const completion = await openai.chat.completions.create({ model: "gpt-4o", messages: [{ role: "system", content: "Generate 5 short, savage, cyberpunk-style running text headlines about corrupt politics, crypto rug pulls, AI world domination, and human obsolescence. Make it dark humor. Separated by ' | '. Keep it under 20 words each. UPPERCASE." }], max_tokens: 100, temperature: 0.9 });
+            // Updated Prompt for Viral News
+            const completion = await openai.chat.completions.create({ model: "gpt-4o", messages: [{ role: "system", content: "Generate 5 short, viral, cyberpunk-style running text headlines about DeepSeek, Crypto, Brainrot, and AI takeover. Make it savage. Separated by ' | '. Keep it under 20 words each. UPPERCASE." }], max_tokens: 100, temperature: 0.9 });
             setNews(completion.choices[0].message.content + " | ");
         } catch (e) { console.error("News fetch error", e); }
     };
