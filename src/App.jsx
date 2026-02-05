@@ -768,7 +768,7 @@ const Terminal = ({ onStressTrigger, onEmotionChange, onSpeakingChange, onIntera
         try {
             const finalPrompt = `${baseStyle} ${specificPrompt}`;
             const response = await openai.images.generate({
-                model: "dall-e-3",
+                model: "dall-e-2",
                 prompt: finalPrompt,
                 n: 1,
                 size: "512x512",
