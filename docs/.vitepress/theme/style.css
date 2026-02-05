@@ -1,0 +1,76 @@
+/**
+ * RETARD THEME - GLOBAL OVERRIDE
+ */
+
+:root {
+  /* COLORS: VOID BLACK & ERROR RED */
+  --vp-c-bg: #000000;
+  --vp-c-bg-alt: #050505;
+  --vp-c-bg-soft: #0a0a0a;
+
+  --vp-c-brand-1: #ff0000; /* Main Red */
+  --vp-c-brand-2: #cc0000; /* Darker Red */
+  --vp-c-brand-3: #ff4d4d; /* Lighter Red */
+  
+  --vp-c-text-1: #e5e5e5;
+  --vp-c-text-2: #a3a3a3;
+  
+  /* FONT: MONOSPACE / TERMINAL STYLE */
+  --vp-font-family-base: 'Courier New', Courier, monospace;
+  --vp-font-family-mono: 'Courier New', Courier, monospace;
+}
+
+/* HEADER STYLING */
+.VPNavBar {
+  border-bottom: 1px solid #333 !important;
+  background-color: rgba(0,0,0,0.9) !important;
+}
+
+/* SIDEBAR STYLING */
+.VPSidebar {
+  border-right: 1px solid #333 !important;
+  background-color: #000000 !important;
+}
+
+/* TEXT TRANSFORMATIONS */
+h1, h2, h3 {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 800;
+  color: var(--vp-c-brand-1);
+}
+
+h1 {
+  border-bottom: 2px solid var(--vp-c-brand-1);
+  padding-bottom: 1rem;
+}
+
+/* CODE BLOCKS */
+div[class*='language-'] {
+  border: 1px solid #333;
+  border-radius: 0;
+  background-color: #080808 !important;
+}
+
+/* BUTTONS */
+.VPButton {
+  border-radius: 0 !important; /* Kotak, tajam */
+  text-transform: uppercase;
+  font-weight: bold;
+  background-color: var(--vp-c-brand-1) !important;
+  color: black !important;
+  border: 1px solid red;
+}
+
+.VPButton:hover {
+  background-color: black !important;
+  color: red !important;
+}
+
+/* CUSTOM ALERT BOXES */
+.custom-block.danger {
+  border: 1px solid #ff0000;
+  background-color: rgba(255, 0, 0, 0.1);
+  color: #ffcccc;
+  border-radius: 0;
+}

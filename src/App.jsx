@@ -1270,7 +1270,42 @@ export default function App() {
           </div>
         </div>
         <RunningText news={news} />
-        <footer className="flex justify-center gap-8 lg:gap-12 text-[10px] lg:text-xs tracking-[0.2em] opacity-60 shrink-0 pb-2 lg:pb-0"><a href="https://x.com/sanukek" className="hover:text-white transition-colors">[X]</a><a href="https://www.moltbook.com/u/retard" className="hover:text-white transition-colors">[MOLTBOOK]</a><a href="#" className="hover:text-white transition-colors">[CHART]</a></footer>
+        <footer className="flex justify-center gap-6 lg:gap-12 text-[10px] lg:text-xs tracking-[0.2em] opacity-60 shrink-0 pb-2 lg:pb-0 flex-wrap px-4">
+        <a 
+      href="https://x.com/sanukek" 
+      target="_blank" 
+      rel="noopener noreferrer" 
+      className="hover:text-yellow-500 transition-colors text-green-500 font-bold border-b border-green-500/30 animate-pulse"
+    >
+        [X]
+    </a>
+        <a 
+      href="https://www.moltbook.com/u/retard" 
+      target="_blank" 
+      rel="noopener noreferrer" 
+      className="hover:text-yellow-500 transition-colors text-green-500 font-bold border-b border-green-500/30 animate-pulse"
+    >
+        [MOLTBOOK]
+    </a>
+        <a 
+      href="#" 
+      target="_blank" 
+      rel="noopener noreferrer" 
+      className="hover:text-yellow-500 transition-colors text-green-500 font-bold border-b border-green-500/30 animate-pulse"
+    >
+        [CHART(SOON)]
+    </a>
+    
+    {/* --- LINK CUSTOM DOMAIN (ELITE TIER) --- */}
+    <a 
+      href="https://docs.retard.social" 
+      target="_blank" 
+      rel="noopener noreferrer" 
+      className="hover:text-yellow-500 transition-colors text-green-500 font-bold border-b border-green-500/30 animate-pulse"
+    >
+        [DOCS]
+    </a>
+</footer>
       </div>
     </div>
   );
