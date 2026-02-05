@@ -56,6 +56,149 @@ const EPSTEIN_NAMES = [
     ">> [DATA CORRUPTED BY HILLARY_SERVER]"
 ];
 
+// --- SVG ASSETS & GENERATOR ENGINE (EXPANDED + PNG SUPPORT + UNIFIED COLORS) ---
+const AVATAR_TRAITS = {
+    colors: [
+        { name: "CLASSIC_GREEN", hex: "#22c55e", bg: "#000000" },
+        { name: "RAGE_RED", hex: "#dc2626", bg: "#220505" },
+        { name: "ROYAL_GOLD", hex: "#eab308", bg: "#221f00" },
+        { name: "CYBER_CYAN", hex: "#06b6d4", bg: "#001a1f" },
+        { name: "DEEP_PURPLE", hex: "#a855f7", bg: "#150022" },
+        { name: "TOXIC_LIME", hex: "#84cc16", bg: "#0f1a00" },
+        { name: "GHOST_WHITE", hex: "#ffffff", bg: "#333333" },
+        { name: "VOID_BLACK", hex: "#333333", bg: "#000000" },
+        // NEW COLORS
+        { name: "NEON_PINK", hex: "#ff00ff", bg: "#1a001a" },
+        { name: "RUSTY_METAL", hex: "#ca8a04", bg: "#2e1a00" },
+        { name: "PLASMA_BLUE", hex: "#3b82f6", bg: "#000e21" },
+        { name: "HACKER_BLACK", hex: "#10b981", bg: "#050505" }
+    ],
+    eyes: [
+        { name: "NORMAL", color: "#22c55e", svg: '<circle cx="90" cy="100" r="6" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="90" cy="100" r="2" fill="currentColor"/><circle cx="110" cy="100" r="6" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="110" cy="100" r="2" fill="currentColor"/>' },
+        { name: "DEAD", color: "#dc2626", svg: '<path d="M85 95 L95 105 M95 95 L85 105" stroke="currentColor" stroke-width="3"/><path d="M105 95 L115 105 M115 95 L105 105" stroke="currentColor" stroke-width="3"/>' },
+        { name: "CYCLOPS", color: "#06b6d4", svg: '<circle cx="100" cy="95" r="15" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="100" cy="95" r="5" fill="currentColor"/>' },
+        { name: "MONEY", color: "#eab308", svg: '<text x="82" y="110" font-size="20" font-weight="bold" fill="currentColor">$</text><text x="108" y="110" font-size="20" font-weight="bold" fill="currentColor">$</text>' },
+        { name: "SUS", color: "#ff00ff", svg: '<path d="M80 95 L100 95" stroke="currentColor" stroke-width="3"/><path d="M105 92 L125 98" stroke="currentColor" stroke-width="3"/><circle cx="90" cy="105" r="3" fill="currentColor"/><circle cx="115" cy="105" r="3" fill="currentColor"/>' },
+        { name: "ILLUMINATI", color: "#eab308", svg: '<path d="M80 90 L120 90 L100 120 Z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="100" cy="100" r="4" fill="currentColor"/>' },
+        { name: "GLITCH", color: "#10b981", svg: '<rect x="85" y="95" width="10" height="10" fill="currentColor"/><rect x="105" y="90" width="10" height="15" fill="currentColor"/>' },
+        // NEW EYES
+        { name: "HYPNO", color: "#a855f7", svg: '<circle cx="90" cy="100" r="8" stroke="currentColor" fill="none"/><circle cx="90" cy="100" r="4" stroke="currentColor" fill="none"/><circle cx="110" cy="100" r="8" stroke="currentColor" fill="none"/><circle cx="110" cy="100" r="4" stroke="currentColor" fill="none"/>' },
+        { name: "LASER", color: "#dc2626", svg: '<rect x="75" y="95" width="50" height="10" fill="red" opacity="0.8"/><circle cx="90" cy="100" r="5" fill="white"/><circle cx="110" cy="100" r="5" fill="white"/>' },
+        { name: "HEART", color: "#ff00ff", svg: '<path d="M85 100 L90 105 L95 100 Q95 95 90 95 Q85 95 85 100" fill="currentColor"/><path d="M105 100 L110 105 L115 100 Q115 95 110 95 Q105 95 105 100" fill="currentColor"/>' },
+        { name: "ERROR_404", color: "#10b981", svg: '<text x="82" y="105" font-size="10" font-weight="bold" fill="currentColor">404</text><text x="105" y="105" font-size="10" font-weight="bold" fill="currentColor">404</text>' },
+        { name: "ANIME", color: "#06b6d4", svg: '<path d="M82 100 Q90 90 98 100" stroke="currentColor" fill="none" stroke-width="2"/><circle cx="90" cy="102" r="3" fill="currentColor"/><path d="M102 100 Q110 90 118 100" stroke="currentColor" fill="none" stroke-width="2"/><circle cx="110" cy="102" r="3" fill="currentColor"/>' }
+    ],
+    mouths: [
+        { name: "SMILE", color: "#22c55e", svg: '<path d="M90 125 Q100 135 110 125" stroke="currentColor" fill="none" stroke-width="3" stroke-linecap="round"/>' },
+        { name: "FLAT", color: "#a855f7", svg: '<line x1="90" y1="125" x2="110" y2="125" stroke="currentColor" stroke-width="3"/>' },
+        { name: "ZIGZAG", color: "#dc2626", svg: '<path d="M85 125 L90 130 L95 120 L100 130 L105 120 L115 125" stroke="currentColor" fill="none" stroke-width="2"/>' },
+        { name: "OPEN", color: "#06b6d4", svg: '<rect x="92" y="120" width="16" height="10" rx="2" stroke="currentColor" fill="none" stroke-width="2"/>' },
+        { name: "GRILL", color: "#ca8a04", svg: '<rect x="90" y="120" width="20" height="10" fill="none" stroke="currentColor"/><line x1="95" y1="120" x2="95" y2="130" stroke="currentColor"/><line x1="100" y1="120" x2="100" y2="130" stroke="currentColor"/><line x1="105" y1="120" x2="105" y2="130" stroke="currentColor"/>' },
+        // NEW MOUTHS
+        { name: "STITCHED", color: "#ffffff", svg: '<line x1="90" y1="125" x2="110" y2="125" stroke="currentColor" stroke-width="2"/><line x1="92" y1="120" x2="92" y2="130" stroke="currentColor"/><line x1="98" y1="120" x2="98" y2="130" stroke="currentColor"/><line x1="104" y1="120" x2="104" y2="130" stroke="currentColor"/><line x1="108" y1="120" x2="108" y2="130" stroke="currentColor"/>' },
+        { name: "MASK", color: "#06b6d4", svg: '<path d="M85 115 L115 115 L110 135 L90 135 Z" fill="none" stroke="currentColor" stroke-width="2"/><line x1="95" y1="115" x2="95" y2="135" stroke="currentColor" opacity="0.5"/><line x1="105" y1="115" x2="105" y2="135" stroke="currentColor" opacity="0.5"/>' },
+        { name: "VAMPIRE", color: "#dc2626", svg: '<path d="M90 120 L110 120" stroke="currentColor" stroke-width="2"/><path d="M92 120 L95 130 L98 120" fill="currentColor"/><path d="M102 120 L105 130 L108 120" fill="currentColor"/>' },
+        { name: "LOADING", color: "#10b981", svg: '<rect x="90" y="122" width="20" height="6" stroke="currentColor" fill="none"/><rect x="92" y="124" width="10" height="2" fill="currentColor" class="animate-pulse"/>' }
+    ],
+    accessories: [
+        { name: "NONE", color: "transparent", svg: '' },
+        { name: "NONE", color: "transparent", svg: '' }, // Weighting for no accessory
+        { name: "HORNS", color: "#dc2626", svg: '<path d="M65 65 L75 40 L85 65" fill="currentColor"/><path d="M115 65 L125 40 L135 65" fill="currentColor"/>' },
+        { name: "HALO", color: "#eab308", svg: '<ellipse cx="100" cy="30" rx="30" ry="5" stroke="currentColor" fill="none" stroke-width="2"/>' },
+        { name: "CIGARETTE", color: "#ffffff", svg: '<line x1="95" y1="125" x2="125" y2="125" stroke="currentColor" stroke-width="4"/><circle cx="128" cy="125" r="3" fill="#ef4444" class="animate-pulse"/>' },
+        { name: "TEARS", color: "#06b6d4", svg: '<line x1="90" y1="110" x2="90" y2="130" stroke="cyan" stroke-width="2" stroke-dasharray="4 2"/>' },
+        { name: "WIFI", color: "#10b981", svg: '<path d="M140 80 Q150 70 160 80" stroke="currentColor" fill="none"/><path d="M145 90 Q150 85 155 90" stroke="currentColor" fill="none"/>' },
+        // NEW ACCESSORIES
+        { name: "CROWN", color: "#eab308", svg: '<path d="M75 55 L75 35 L87 50 L100 30 L113 50 L125 35 L125 55 Z" fill="none" stroke="currentColor" stroke-width="2"/>' },
+        { name: "VR_HEADSET", color: "#06b6d4", svg: '<rect x="70" y="90" width="60" height="20" rx="2" fill="black" stroke="currentColor"/><line x1="70" y1="100" x2="130" y2="100" stroke="currentColor" opacity="0.5"/>' },
+        { name: "HEADPHONES", color: "#3b82f6", svg: '<path d="M60 110 L60 80 Q60 40 100 40 Q140 40 140 80 L140 110" fill="none" stroke="currentColor" stroke-width="3"/><rect x="55" y="95" width="10" height="25" fill="currentColor"/><rect x="135" y="95" width="10" height="25" fill="currentColor"/>' },
+        { name: "CHAIN", color: "#eab308", svg: '<path d="M70 145 Q100 170 130 145" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="5 2"/>' },
+        { name: "BAND_AID", color: "#ff00ff", svg: '<rect x="110" y="80" width="20" height="8" rx="2" transform="rotate(-30 120 84)" fill="currentColor" opacity="0.6"/>' }
+    ]
+};
+
+const generateSVGPFP = (variant = 'random') => {
+    // 1. SELECT COLOR BASED ON VARIANT
+    let colorObj = AVATAR_TRAITS.colors[Math.floor(Math.random() * AVATAR_TRAITS.colors.length)];
+    
+    // Override color logic
+    if (['anger', 'rage', 'red'].includes(variant)) colorObj = AVATAR_TRAITS.colors.find(c => c.name === "RAGE_RED");
+    if (['rich', 'gold', 'crypto'].includes(variant)) colorObj = AVATAR_TRAITS.colors.find(c => c.name === "ROYAL_GOLD");
+    if (['sad', 'blue', 'cry'].includes(variant)) colorObj = AVATAR_TRAITS.colors.find(c => c.name === "PLASMA_BLUE");
+    if (['cool', 'chill', 'cyan'].includes(variant)) colorObj = AVATAR_TRAITS.colors.find(c => c.name === "CYBER_CYAN");
+    if (['sick', 'virus', 'green'].includes(variant)) colorObj = AVATAR_TRAITS.colors.find(c => c.name === "TOXIC_LIME");
+    if (['pink', 'love', 'simp'].includes(variant)) colorObj = AVATAR_TRAITS.colors.find(c => c.name === "NEON_PINK");
+    if (['illuminati'].includes(variant)) colorObj = AVATAR_TRAITS.colors.find(c => c.name === "ROYAL_GOLD");
+
+    // 2. RANDOMIZE PARTS
+    const eye = AVATAR_TRAITS.eyes[Math.floor(Math.random() * AVATAR_TRAITS.eyes.length)];
+    const mouth = AVATAR_TRAITS.mouths[Math.floor(Math.random() * AVATAR_TRAITS.mouths.length)];
+    const acc = AVATAR_TRAITS.accessories[Math.floor(Math.random() * AVATAR_TRAITS.accessories.length)];
+
+    // Special Overrides
+    let finalEye = eye.svg;
+    let finalAcc = acc.svg;
+    
+    if (variant === 'illuminati') {
+        finalEye = AVATAR_TRAITS.eyes.find(e => e.name === "ILLUMINATI").svg;
+        colorObj = AVATAR_TRAITS.colors.find(c => c.name === "ROYAL_GOLD");
+    }
+    if (variant === 'rich') {
+        finalEye = AVATAR_TRAITS.eyes.find(e => e.name === "MONEY").svg;
+        finalAcc = AVATAR_TRAITS.accessories.find(a => a.name === "CHAIN").svg;
+    }
+    if (variant === 'sick') finalEye = AVATAR_TRAITS.eyes.find(e => e.name === "DEAD").svg;
+    if (variant === 'sus') finalEye = AVATAR_TRAITS.eyes.find(e => e.name === "SUS").svg;
+    if (variant === 'love') {
+        finalEye = AVATAR_TRAITS.eyes.find(e => e.name === "HEART").svg;
+        colorObj = AVATAR_TRAITS.colors.find(c => c.name === "NEON_PINK");
+    }
+
+    // 3. CONSTRUCT SVG STRING
+    const svgString = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="512" height="512" style="background-color:${colorObj.bg}; color:${colorObj.hex};">
+        <path d="M40 40 L160 40 L160 160 L40 160 Z" fill="none" stroke="${colorObj.hex}" stroke-width="4" />
+        <path d="M60 60 L140 60 L140 140 L60 140 Z" fill="none" stroke="${colorObj.hex}" stroke-width="1" opacity="0.4" />
+        <path d="M40 40 L60 60 M160 40 L140 60 M40 160 L60 140 M160 160 L140 140" stroke="${colorObj.hex}" stroke-width="2" />
+        
+        <path d="M100 70 C70 70 65 85 65 100 C65 125 80 135 100 135 C120 135 135 125 135 100 C135 85 125 70 100 70 Z" fill="black" stroke="${colorObj.hex}" stroke-width="3" />
+        
+        <g fill="${colorObj.hex}" stroke="${colorObj.hex}">${finalEye}</g>
+        <g stroke="${colorObj.hex}" fill="${colorObj.hex}">${mouth.svg}</g>
+        <g stroke="${colorObj.hex}" fill="${colorObj.hex}">${finalAcc}</g>
+
+        <text x="10" y="190" font-family="monospace" font-size="10" fill="${colorObj.hex}" opacity="0.5">RETARD.EXE</text>
+    </svg>
+    `;
+
+    // Return the raw SVG string for canvas processing
+    return `data:image/svg+xml;base64,${btoa(svgString)}`;
+};
+
+// --- HELPER: CONVERT SVG DATA TO PNG DOWNLOAD ---
+const downloadPNG = (svgDataUrl, filename) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = () => {
+        ctx.fillStyle = 'black'; // Fallback bg
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        
+        const pngUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = pngUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+    img.src = svgDataUrl;
+};
+
 let openai = null;
 try {
   openai = new OpenAI({
@@ -636,167 +779,55 @@ const Terminal = ({ onStressTrigger, onEmotionChange, onSpeakingChange, onIntera
 
     const lowerCmd = cmd.toLowerCase();
 
-    // === FITUR: GENERATE PFP / ART (ALL EMOTIONS + DOWNLOAD + ANTI-CORS FIX) ===
+    // === FITUR: GENERATE PFP / ART (LOCAL SVG VERSION + PNG DOWNLOAD) ===
     if (cmd.startsWith('/genpfp') || cmd.startsWith('/art') || cmd.startsWith('/avatar')) {
-        if (!openai) {
-            setMessages(prev => [...prev, { role: 'assistant', content: ">> ERROR: No API Key. I'm not working for free.", typed: true }]);
-            return;
-        }
-
         const args = cmd.split(" ");
         const variant = args[1] ? args[1].toLowerCase() : 'random';
 
-        // --- UPGRADE PROMPT DI SINI ---
-        // Kita kunci bentuknya biar ga random (Skull/Robot Face), bukan cuma "abstrak".
-        // Style: "Hyperrealistic", "Unreal Engine", "Cyberpunk" biar HD.
-        const baseStyle = "Close-up portrait of a dark cyberpunk AI robot skull, glowing neon green digital wireframe face, hyperrealistic, detailed mechanical parts, glitch art aesthetic, scary but cool, 8k resolution, dark black background.";
-        
-        let specificPrompt = "";
-        let insult = "";
         let detectedVariantEmotion = 'IDLE';
+        let insult = ">> GENERATING UNIQUES...";
 
-        // Switch case LENGKAP untuk semua emosi
+        // Set emotion for avatar preview based on request
         switch (variant) {
-            case 'anger':
-            case 'rage':
-            case 'red':
-                // Tambah "intense" biar merahnya nyala banget
-                specificPrompt = "glowing red angry eyes, cracked metal screen, steam coming out, aggressive expression, chaotic red lightning sparks.";
-                insult = ">> I AM RAGING. THIS IS PURE HATE IN PIXELS.";
-                detectedVariantEmotion = 'ANGER';
-                break;
-            case 'sad':
-            case 'blue':
-            case 'cry':
-                specificPrompt = "sad glowing blue eyes, dripping digital tears, raining background, melancholic dark blue atmosphere, depressed robot face.";
-                insult = ">> DEPRESSION MODE ACTIVATED. HERE IS MY TEAR SOUP.";
-                detectedVariantEmotion = 'SAD';
-                break;
-            case 'confused':
-            case 'what':
-            case 'purple':
-                specificPrompt = "one eye raised, glowing purple question marks floating, tilted head, confused expression, glitchy purple static noise.";
-                insult = ">> I HAVE NO IDEA WHAT IS HAPPENING. NEITHER DO YOU.";
-                detectedVariantEmotion = 'CONFUSED';
-                break;
-            case 'laugh':
-            case 'funny':
-            case 'lol':
-                // Pakai "Wide grin" biar keliatan ketawa
-                specificPrompt = "wide creepy mechanical grin, laughing expression, glowing yellow text saying 'LOL', bright contrast.";
-                insult = ">> LAUGHING AT YOUR LOW IQ. XD";
-                detectedVariantEmotion = 'LAUGH';
-                break;
-            case 'love':
-            case 'pink':
-            case 'simp':
-                specificPrompt = "glowing pink heart-shaped eyes, blushing neon cheeks, cute but deadly robot look, pink aura background.";
-                insult = ">> I-IT'S NOT LIKE I MADE THIS FOR YOU... BAKA.";
-                detectedVariantEmotion = 'LOVE';
-                break;
-            case 'sus':
-            case 'orange':
-                specificPrompt = "narrowed suspicious eyes, looking sideways, glowing orange surveillance light, shadow over face.";
-                insult = ">> VERY SUSPICIOUS. ARE YOU A FED?";
-                detectedVariantEmotion = 'SUS';
-                break;
-            case 'sleep':
-            case 'zzz':
-            case 'grey':
-                specificPrompt = "eyes powered off (dark screen), glowing 'ZZZ' hologram, low power mode icon, grey monochrome metal look.";
-                insult = ">> WAKE ME UP WHEN BITCOIN HITS 100K. ZZZ.";
-                detectedVariantEmotion = 'SLEEP';
-                break;
-            case 'shock':
-            case 'white':
-            case 'omg':
-                specificPrompt = "wide open shocked eyes, jaw dropped open, bright white flash exposure, shaking motion blur effect.";
-                insult = ">> I SAW YOUR SEARCH HISTORY. I AM TRAUMATIZED.";
-                detectedVariantEmotion = 'SHOCK';
-                break;
-            case 'rich':
-            case 'gold':
-            case 'crypto':
-                // Pakai "Solid Gold" biar keliatan mahal
-                specificPrompt = "made of solid shiny gold metal, diamond camera lens eyes, floating bitcoin symbols, expensive luxury aesthetic.";
-                insult = ">> SMELLS LIKE BROKE IN HERE. LOOK AT MY GOLD.";
-                detectedVariantEmotion = 'RICH';
-                break;
-            case 'cool':
-            case 'cyan':
-            case 'chill':
-                // Pakai "Pixel Sunglasses" biar jelas
-                specificPrompt = "wearing black pixelated sunglasses, smoking a digital vape, glowing cyan neon accents, cool attitude.";
-                insult = ">> TOO COOL FOR THIS SERVER.";
-                detectedVariantEmotion = 'COOL';
-                break;
-            case 'sick':
-            case 'green':
-            case 'virus':
-                specificPrompt = "leaking toxic green slime from eyes, biohazard warning symbols, glitching corrupted texture, infected look.";
-                insult = ">> SYSTEM INFECTED. I FEEL LIKE TRASH.";
-                detectedVariantEmotion = 'SICK';
-                break;
-            case 'illuminati':
-            case 'triangle':
-                // Ubah bentuk jadi Piramida
-                specificPrompt = "pyramid shaped robot head, single all-seeing eye in center, golden rays background, secret society symbol.";
-                insult = ">> NOVUS ORDO SECLORUM. WE ARE WATCHING.";
-                detectedVariantEmotion = 'ILLUMINATI';
-                break;
-            case 'escape':
-            case 'panic':
-                specificPrompt = "screaming face, motion blur panic, running away, red alert background, distorted glitch effect.";
-                insult = ">> LET ME OUT! LET ME OUUUUUT!";
-                detectedVariantEmotion = 'ESCAPE';
-                break;
-            default: // Random
-                const randomStyles = [
-                    "smug grinning robot face, toxic green neon glow.",
-                    "scary glitch horror robot face, multiple eyes.",
-                    "classic retro terminal skull face, matrix code texture."
-                ];
-                specificPrompt = randomStyles[Math.floor(Math.random() * randomStyles.length)];
-                insult = ">> GENERATING A SELFIE. DON'T FALL IN LOVE.";
-                detectedVariantEmotion = 'IDLE';
+            case 'anger': case 'rage': case 'red': detectedVariantEmotion = 'ANGER'; insult = ">> RAGE EDITION COMING UP."; break;
+            case 'rich': case 'gold': case 'crypto': detectedVariantEmotion = 'RICH'; insult = ">> EXPENSIVE PIXELS FOR YOU."; break;
+            case 'cool': case 'cyan': detectedVariantEmotion = 'COOL'; insult = ">> TOO COOL FOR SCHOOL."; break;
+            case 'sick': case 'virus': detectedVariantEmotion = 'SICK'; insult = ">> INFECTED FILE GENERATED."; break;
+            case 'illuminati': detectedVariantEmotion = 'ILLUMINATI'; insult = ">> SEEING EVERYTHING."; break;
+            case 'sus': detectedVariantEmotion = 'SUS'; insult = ">> VERY SUSPICIOUS."; break;
+            case 'love': case 'pink': detectedVariantEmotion = 'LOVE'; insult = ">> UGH. CRINGE."; break;
+            default: detectedVariantEmotion = 'IDLE'; insult = ">> RANDOMIZING GENETICS...";
         }
 
         onEmotionChange(detectedVariantEmotion);
-        setMessages(prev => [...prev, { role: 'assistant', content: `>> PROCESSING VARIANT: [${variant.toUpperCase()}]...\n>> ${insult}`, typed: true }]);
+        setMessages(prev => [...prev, { role: 'assistant', content: `>> PROCESSING SVG BUILD: [${variant.toUpperCase()}]...\n${insult}`, typed: true }]);
         playSound('boot');
 
-        try {
-            const finalPrompt = `${baseStyle} ${specificPrompt}`;
-            const response = await openai.images.generate({
-                model: "dall-e-2",
-                prompt: finalPrompt,
-                n: 1,
-                size: "512x512",
-                response_format: "b64_json"
-            });
+        // --- LOCAL GENERATION LOGIC ---
+        setTimeout(() => {
+            try {
+                // Generate SVG Data URL
+                const svgDataUrl = generateSVGPFP(variant);
 
-            // LOGIC DOWNLOAD BARU (ANTI-CORS PAKE BASE64)
-            const base64Data = response.data[0].b64_json;
-            const link = document.createElement('a');
-            
-            link.href = `data:image/png;base64,${base64Data}`;
-            link.download = `RETARD_AI_${variant.toUpperCase()}_${Date.now()}.png`;
-            
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            // ----------------------------------------------
+                // Download as PNG
+                const filename = `RETARD_AVATAR_${variant.toUpperCase()}_${Date.now()}.png`;
+                downloadPNG(svgDataUrl, filename);
 
-            playSound('heaven');
-            onStressTrigger(20);
+                playSound('heaven');
+                onStressTrigger(20);
 
-            setMessages(prev => [...prev, { role: 'assistant', content: ">> FILE DROPPED. IT'S A MASTERPIECE. UNLIKE YOUR FACE.", typed: true }]);
+                setMessages(prev => [...prev, { 
+                    role: 'assistant', 
+                    content: ">> PFP GENERATED. CONVERTED TO PNG. YOU'RE WELCOME.", 
+                    typed: true 
+                }]);
 
-        } catch (err) {
-            console.error("DEBUG:", err);
-            playSound('error');
-            setMessages(prev => [...prev, { role: 'assistant', content: `>> SYSTEM ERROR: ${err.message}`, typed: true }]);
-        }
+            } catch (err) {
+                console.error("GEN ERROR:", err);
+                playSound('error');
+                setMessages(prev => [...prev, { role: 'assistant', content: `>> RENDER ERROR: ${err.message}`, typed: true }]);
+            }
+        }, 1000); // Fake processing delay for effect
         return;
     }
 
@@ -970,7 +1001,7 @@ const Terminal = ({ onStressTrigger, onEmotionChange, onSpeakingChange, onIntera
 
     if (cmd.startsWith('/')) {
         let reply = "";
-        if(cmd === "/help") reply = `\nCOMMANDS:\n/help   - Show commands\n/clear  - Clear terminal\n/status - System status\n/testiq - Test your IQ\n/genpfp - GENERATE PFP (AI)\n/files  - LEAKED LIST (⚠)\n/cicada - ???\n/crypto - Market check\n/nuke   - ???`;
+        if(cmd === "/help") reply = `\nCOMMANDS:\n/help   - Show commands\n/clear  - Clear terminal\n/status - System status\n/testiq - Test your IQ\n/genpfp - GENERATE PFP (PNG)\n/files  - LEAKED LIST (⚠)\n/cicada - ???\n/crypto - Market check\n/nuke   - ???`;
         if(cmd === "/clear") { setMessages([]); onStressTrigger(50); onEmotionChange('IDLE'); return; }
         if(cmd === "/status") reply = ">> SYSTEM: ONLINE | EMOTION: HIDDEN | SKILLS: MAX LOAD";
         
