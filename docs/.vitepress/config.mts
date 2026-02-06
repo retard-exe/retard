@@ -1,22 +1,26 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
-  title: "RETARD_OS",
+  title: "RETARD_CLI",
   description: "Documentation for the intellectually superior.",
   appearance: 'dark', 
   lastUpdated: true,
 
   head: [
+    // Favicon PNG (Simpan file logo.png di docs/public/)
+    ['link', { rel: 'icon', type: 'image/png', href: '/logo.png' }],
     ['meta', { name: 'theme-color', content: '#ff0000' }]
   ],
 
   themeConfig: {
-    // Logo Text
-    siteTitle: '>> RETARD_TERMINAL_',
-    
-    // Menu Atas
+    // Logo dan Tautan
+    logo: '/logo.png', 
+    siteTitle: '>> RETARD DOCS',
+    logoLink: '/protocol/manifesto',
+
+    // Menu Navigasi Atas
     nav: [
-      { text: 'INITIATE', link: '/protocol/start' },
+      { text: 'RETARD.EXE', link: 'https://retard.social' },
       { text: 'IQ_CHECK', link: '/protocol/iq-check' },
       { text: 'PUZZLES', link: '/protocol/cicada' }
     ],
@@ -27,7 +31,7 @@ export default defineConfig({
         text: 'SYSTEM_CORE',
         items: [
           { text: 'Manifesto', link: '/protocol/manifesto' },
-          { text: 'Installation', link: '/protocol/start' },
+          { text: 'RETARD_CLI', link: '/protocol/start' },
           { text: 'Architecture', link: '/protocol/architecture' }
         ]
       },
@@ -38,17 +42,10 @@ export default defineConfig({
           { text: 'Brain_Engine', link: '/protocol/brain' },
           { text: 'Stress_Level', link: '/protocol/stress' }
         ]
-      },
-      {
-        text: 'CICADA_3301',
-        items: [
-          { text: 'Epstein_Puzzle', link: '/protocol/epstein' },
-          { text: 'Hidden_Truth', link: '/protocol/truth' }
-        ]
       }
     ],
 
-    // SOCIAL LINKS (INI YANG GUE UPDATE PAKE LINK LU)
+    // Tautan Sosial
     socialLinks: [
       { icon: 'x', link: 'https://x.com/sanukek' },
       { icon: 'github', link: 'https://github.com/retard-exe/retard' }

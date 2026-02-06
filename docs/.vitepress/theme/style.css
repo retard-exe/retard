@@ -1,76 +1,105 @@
 /**
- * RETARD THEME - GLOBAL OVERRIDE
+ * RETARD_CLI DOCS THEME
+ * Base: Hacker Terminal Style
  */
 
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+
 :root {
-  /* COLORS: VOID BLACK & ERROR RED */
-  --vp-c-bg: #000000;
-  --vp-c-bg-alt: #050505;
-  --vp-c-bg-soft: #0a0a0a;
+  /* --- WARNA DASAR (Palette dari App.jsx) --- */
+  --vp-c-bg: #000000 !important;
+  --vp-c-bg-alt: #050505 !important;
+  --vp-c-bg-soft: #0a0a0a !important;
 
-  --vp-c-brand-1: #ff0000; /* Main Red */
-  --vp-c-brand-2: #cc0000; /* Darker Red */
-  --vp-c-brand-3: #ff4d4d; /* Lighter Red */
+  /* TEXT HIJAU TERMINAL */
+  --vp-c-text-1: #22c55e !important; /* Green-500 */
+  --vp-c-text-2: #15803d !important; /* Green-700 (Dimmed) */
+  --vp-c-text-3: #14532d !important;
   
-  --vp-c-text-1: #e5e5e5;
-  --vp-c-text-2: #a3a3a3;
+  /* BRAND COLORS (Link & Tombol) */
+  --vp-c-brand-1: #22c55e !important;
+  --vp-c-brand-2: #4ade80 !important; /* Green-400 */
+  --vp-c-brand-3: #16a34a !important;
   
-  /* FONT: MONOSPACE / TERMINAL STYLE */
-  --vp-font-family-base: 'Courier New', Courier, monospace;
-  --vp-font-family-mono: 'Courier New', Courier, monospace;
+  /* BORDER & DIVIDER (Hijau Tipis) */
+  --vp-c-border: rgba(34, 197, 94, 0.3) !important;
+  --vp-c-divider: rgba(34, 197, 94, 0.2) !important;
+  
+  /* FONT */
+  --vp-font-family-base: "JetBrains Mono", "Courier New", monospace !important;
+  --vp-font-family-mono: "JetBrains Mono", "Courier New", monospace !important;
+
+  /* NAVIGATION BAR */
+  --vp-nav-bg-color: rgba(0, 0, 0, 0.9) !important;
+  --vp-sidebar-bg-color: rgba(0, 0, 0, 0.95) !important;
 }
 
-/* HEADER STYLING */
-.VPNavBar {
-  border-bottom: 1px solid #333 !important;
-  background-color: rgba(0,0,0,0.9) !important;
+/* --- BACKGROUND EFEK CRT (Persis App.jsx) --- */
+body {
+  background-color: #000 !important;
+  background-image: 
+    linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+    linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  background-size: 100% 2px, 3px 100%;
 }
 
-/* SIDEBAR STYLING */
-.VPSidebar {
-  border-right: 1px solid #333 !important;
-  background-color: #000000 !important;
-}
-
-/* TEXT TRANSFORMATIONS */
-h1, h2, h3 {
+/* --- TEXT GLOW EFFECT --- */
+h1, h2, h3, .VPNavBarTitle {
+  text-shadow: 0 0 5px rgba(34, 197, 94, 0.6);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 800;
-  color: var(--vp-c-brand-1);
+  letter-spacing: 0.1em;
 }
 
-h1 {
-  border-bottom: 2px solid var(--vp-c-brand-1);
-  padding-bottom: 1rem;
+/* --- SIDEBAR & NAV BORDER --- */
+.VPNav, .VPSidebar {
+  border-bottom: 1px solid var(--vp-c-border) !important;
+  border-right: 1px solid var(--vp-c-border) !important;
 }
 
-/* CODE BLOCKS */
-div[class*='language-'] {
-  border: 1px solid #333;
-  border-radius: 0;
-  background-color: #080808 !important;
-}
-
-/* BUTTONS */
+/* --- TOMBOL (KOTAK ALA TERMINAL) --- */
 .VPButton {
-  border-radius: 0 !important; /* Kotak, tajam */
-  text-transform: uppercase;
-  font-weight: bold;
-  background-color: var(--vp-c-brand-1) !important;
-  color: black !important;
-  border: 1px solid red;
+  border-radius: 0 !important; /* Gak boleh tumpul */
+  border: 1px solid var(--vp-c-brand-1) !important;
+  background-color: transparent !important;
+  color: var(--vp-c-brand-1) !important;
+  transition: all 0.3s ease;
 }
 
 .VPButton:hover {
-  background-color: black !important;
-  color: red !important;
+  background-color: var(--vp-c-brand-1) !important;
+  color: #000 !important;
+  box-shadow: 0 0 15px var(--vp-c-brand-1);
 }
 
-/* CUSTOM ALERT BOXES */
-.custom-block.danger {
-  border: 1px solid #ff0000;
-  background-color: rgba(255, 0, 0, 0.1);
-  color: #ffcccc;
-  border-radius: 0;
+/* --- CODE BLOCKS (HITAM PEKAT) --- */
+.vp-doc div[class*='language-'] {
+  border-radius: 0 !important;
+  border: 1px solid var(--vp-c-border) !important;
+  background-color: #050505 !important;
+}
+
+/* --- HILANGIN FITUR LIGHT MODE --- */
+.VPSwitch {
+  display: none !important;
+}
+
+/* --- SCROLLBAR TERMINAL --- */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #000; 
+}
+::-webkit-scrollbar-thumb {
+  background: #22c55e; 
+  border: 1px solid #000;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4ade80; 
+}
+
+/* --- DOCUMENT CONTENT OVERRIDES --- */
+.vp-doc p, .vp-doc li {
+    font-size: 15px;
+    line-height: 1.6;
 }
