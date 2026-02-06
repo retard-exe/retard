@@ -37,3 +37,5 @@ assets/
 # Custom hidden files
 src/App.jsx
 bin/cli.js
+src/App.css
+src/index.css
