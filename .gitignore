@@ -35,4 +35,5 @@ assets/
 .env.*.local
 
 # Custom hidden files
-src/app.jsx
+src/App.jsx
+bin/cli.js
